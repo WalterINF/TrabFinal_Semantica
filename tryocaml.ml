@@ -47,8 +47,8 @@ type expr =
   (*  Extensoes do sistema de tipos *)
   | Nothing of tipo
   | Just of expr
-  | MatchWithNothing of expr * expr * ident * expr
-  | Justx of ident * expr
+  | MatchWithNothing of expr * expr * ident * expr 
+  (*| Justx of ident * expr //nao sei se ta certo*)
   | Nil of tipo
   | List of expr * expr 
   | MatchWithNil of expr * expr * ident * ident * expr
@@ -169,8 +169,8 @@ let rec typeinfer (tenv:tenv) (e:expr) : tipo =
   
 
   (*  T-Nothing *) 
-  |Nothing(t1) -> TyMaybe(t1) 
-           
+  |Nothing(t1) -> TyMaybe(t1)
+  
   (*  T-Just *)    
   |Just(e1) ->
       let t1 = typeinfer tenv e1 in
@@ -181,11 +181,36 @@ let rec typeinfer (tenv:tenv) (e:expr) : tipo =
       let t2 = typeinfer tenv e2 in
       let t3 = typeinfer tenv e3 in
       if t2 = t3 then t2
-      else raise (TypeError "tipos do match with diferentes")
-  | _ -> raise (TypeError "condição de IF não é do tipo bool")
+      else raise (TypeError "tipos do match with diferentes") 
       
   (*  T-Nil *) 
   |Nil(t1) -> TyList(t1)
+  
+  (*  T-Cons *) 
+  |List(e1,e2) -> let t1 = typeinfer tenv e1 in
+      let t2 = typeinfer tenv e2 in
+      (match t2 with 
+       |TyList(t3) -> if t1 = t3 then t1 else raise (TypeError "tipos da lista diferentes") 
+       |_ -> raise (TypeError "tipos da lista diferentes")) 
+  
+  
+              
+  (*  T-MatchLt *)
+  |MatchWithNil(e1,e2,id1,id2,e3) ->
+      let t2 = typeinfer tenv e2 in
+      let t3 = typeinfer tenv e3 in
+      if t2 = t3 then t2
+      else raise (TypeError "tipos do match with diferentes") 
+          
+  (*  T-Cons *)
+  |Pipe(e1,e2) -> 
+      (match typeinfer tenv e2 with
+         TyFn(t, t') ->  if (typeinfer tenv e1) = t then t'
+           else raise (TypeError "tipo argumento errado" )
+       | _ -> raise (TypeError "tipo função era esperado"))
+      
+
+      
   
      
 
