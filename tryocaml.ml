@@ -295,10 +295,18 @@ let rec eval (renv:renv) (e:expr) :valor =
       let renv'=  (f, VRClos(f,x,e1,renv)) :: renv
       in eval renv' e2
         
-        
   | LetRec _ -> raise BugParser 
+
+  | Nothing _ -> vNothing
+
+  | Nil _ -> vNil
                   
+  | Just e -> VJust (eval renv e)
   
+  | List(e1, e2) -> Vlist (eval renv e1, eval renv e2)
+
+
+
 (* função auxiliar que converte tipo para string *)
 
 let rec ttos (t:tipo) : string =
