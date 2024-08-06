@@ -325,7 +325,22 @@ let rec eval (renv:renv) (e:expr) :valor =
        | VJust v -> eval ((id1, v) :: renv) e3
        | _ -> raise BugTypeInfer)
 
+  (* 
+    Explicação:
 
+    Operação muito semelhante à MatchWithNothing. Vamos iniciar avaliando e1,
+    caso seja VNil, iremos simplesmente avaliar e2. No caso em que é um Vlist,
+    faremos uma extensão do ambiente renv, mas dessa vez considerando os dois 
+    componentes de Vlist, logo, v1 será associado a id1 e v2 associado a id2,
+    assim, sempre que houver ocorrência de id1 ou id2 em e3 haverá a substi-
+    tuição para v1 ou v2, respectivamente.
+
+  *)
+  | MatchWithNil(e1, e2, id1, id2, e3) ->
+      (match eval renv e1 with
+         VNil -> eval renv e2
+       | Vlist(v1, v2) -> eval ((id1, v1) :: (id2, v2) :: renv) e3
+       | _ -> raise BugTypeInfer)
 
 (* função auxiliar que converte tipo para string *)
 
