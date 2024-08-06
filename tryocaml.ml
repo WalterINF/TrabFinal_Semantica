@@ -297,13 +297,33 @@ let rec eval (renv:renv) (e:expr) :valor =
         
   | LetRec _ -> raise BugParser 
 
-  | Nothing _ -> vNothing
+  | Nothing _ -> VNothing
 
-  | Nil _ -> vNil
+  | Nil _ -> VNil
                   
   | Just e -> VJust (eval renv e)
   
   | List(e1, e2) -> Vlist (eval renv e1, eval renv e2)
+
+
+  (* 
+    Explicação:
+
+    Inicialmente, vamos avaliar a expressão e1 para obter ou um VNothing,
+    ou um VJust. No caso de VNothing, apenas é necessário avaliar e2.
+    No caso do VJust, faremos uma extensão do ambiente renv, isso basicamente
+    significa que vamos declarar uma variável id1 com o valor v e esta variável
+    será utilizada em algum momento na expressão e3.
+
+    ((id1, v) :: renv) - a sintaxe :: indica a criação de uma nova lista, em que
+    (id1, v) é o primeiro elemento e renv é uma lista.
+
+  *)
+  | MatchWithNothing(e1,e2,id1,e3) ->
+      (match eval renv e1 with
+         VNothing -> eval renv e2
+       | VJust v -> eval ((id1, v) :: renv) e3
+       | _ -> raise BugTypeInfer)
 
 
 
