@@ -183,6 +183,7 @@ let rec typeinfer (tenv:tenv) (e:expr) : tipo =
       if t2 = t3 then t2
       else raise (TypeError "tipos do match with diferentes") 
       
+          
   (*  T-Nil *) 
   |Nil(t1) -> TyList(t1)
   
@@ -208,12 +209,8 @@ let rec typeinfer (tenv:tenv) (e:expr) : tipo =
          TyFn(t, t') ->  if (typeinfer tenv e1) = t then t'
            else raise (TypeError "tipo argumento errado" )
        | _ -> raise (TypeError "tipo função era esperado"))
-      
-
-      
   
-     
-
+  
                   
   
 (**+++++++++++++++++++++++++++++++++++++++++*)
@@ -252,7 +249,7 @@ let rec eval (renv:renv) (e:expr) :valor =
       let v1 = eval renv e1 in
       let v2 = eval renv e2 in
       compute oper v1 v2
-        
+  
   | Pair(e1,e2) ->
       let v1 = eval renv e1 in
       let v2 = eval renv e2
@@ -294,54 +291,37 @@ let rec eval (renv:renv) (e:expr) :valor =
   | LetRec(f,TyFn(t1,t2),Fn(x,tx,e1), e2) when t1 = tx ->
       let renv'=  (f, VRClos(f,x,e1,renv)) :: renv
       in eval renv' e2
-        
-  | LetRec _ -> raise BugParser 
-
-  | Nothing _ -> VNothing
-
-  | Nil _ -> VNil
-                  
-  | Just e -> VJust (eval renv e)
   
-  | List(e1, e2) -> Vlist (eval renv e1, eval renv e2)
+  | LetRec _ -> raise BugParser 
+                  
+                  
+  (* extensões da semântica de tipos *)
+
+  | Nothing(t1) -> VNothing
+    
+  | Nil(t1) -> VNil 
+    
+  | Just(e1) ->
+      let v1 = eval renv e1 
+      in VJust(v1)
+        
+  
+    
+        
 
 
-  (* 
-    Explicação:
-
-    Inicialmente, vamos avaliar a expressão e1 para obter ou um VNothing,
-    ou um VJust. No caso de VNothing, apenas é necessário avaliar e2.
-    No caso do VJust, faremos uma extensão do ambiente renv, isso basicamente
-    significa que vamos declarar uma variável id1 com o valor v e esta variável
-    será utilizada em algum momento na expressão e3.
-
-    ((id1, v) :: renv) - a sintaxe :: indica a criação de uma nova lista, em que
-    (id1, v) é o primeiro elemento e renv é uma lista.
-
-  *)
-  | MatchWithNothing(e1,e2,id1,e3) ->
-      (match eval renv e1 with
-         VNothing -> eval renv e2
-       | VJust v -> eval ((id1, v) :: renv) e3
-       | _ -> raise BugTypeInfer)
-
-  (* 
-    Explicação:
-
-    Operação muito semelhante à MatchWithNothing. Vamos iniciar avaliando e1,
-    caso seja VNil, iremos simplesmente avaliar e2. No caso em que é um Vlist,
-    faremos uma extensão do ambiente renv, mas dessa vez considerando os dois 
-    componentes de Vlist, logo, v1 será associado a id1 e v2 associado a id2,
-    assim, sempre que houver ocorrência de id1 ou id2 em e3 haverá a substi-
-    tuição para v1 ou v2, respectivamente.
-
-  *)
-  | MatchWithNil(e1, e2, id1, id2, e3) ->
-      (match eval renv e1 with
-         VNil -> eval renv e2
-       | Vlist(v1, v2) -> eval ((id1, v1) :: (id2, v2) :: renv) e3
-       | _ -> raise BugTypeInfer)
-
+        (*
+          | Nothing of tipo
+          | Just of expr
+          | MatchWithNothing of expr * expr * ident * expr 
+  (*| Justx of ident * expr //nao sei se ta certo*)
+          | Nil of tipo
+          | List of expr * expr 
+          | MatchWithNil of expr * expr * ident * ident * expr
+          | Pipe of expr * expr
+*)
+                  
+  
 (* função auxiliar que converte tipo para string *)
 
 let rec ttos (t:tipo) : string =
