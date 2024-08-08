@@ -73,6 +73,12 @@ and
 
   (*  Ambiente ================ *)
 type tenv = (ident * tipo) list
+    
+    
+
+  (*função de substituição*)
+let rec update renv x var  =
+  (x,var) :: renv
 
   
 (* exceções que não devem ocorrer  *)
@@ -306,17 +312,21 @@ let rec eval (renv:renv) (e:expr) :valor =
   | MatchWithNothing (e1, e2, x, e3) -> 
       (match eval renv e1 with
        | VNothing -> eval renv e2
-       | VJust v4 -> eval renv e3 (*MUDAR*)
+       | VJust v4 -> let renv2 = update renv x v4 in
+           eval renv2 e3
        | _ -> raise BugTypeInfer)
-      
-      
+  
+
   | MatchWithNil (e1, e2, x, xs, e3) -> 
       (match eval renv e1 with 
        | VNil -> eval renv e2
-       | Vlist(v,vs) -> eval renv e2 (*MUDAR*)
+       | Vlist(v,vs) -> 
+           let renv1 = update renv x v in
+           let renv2 = update renv1 xs vs in
+           eval renv2 e3
        | _ -> raise BugTypeInfer )
-      
-      
+  
+  
   | Pipe(e1, e2) -> VNum 404 (*MUDAR*)
       
         
