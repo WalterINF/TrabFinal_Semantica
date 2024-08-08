@@ -172,9 +172,7 @@ let rec typeinfer (tenv:tenv) (e:expr) : tipo =
   |Nothing(t1) -> TyMaybe(t1)
   
   (*  T-Just *)    
-  |Just(e1) ->
-      let t1 = typeinfer tenv e1 in
-      TyMaybe(t1)
+  |Just(e1) -> TyMaybe(typeinfer tenv e1)
         
   (*  T-MatchMB *) 
   |MatchWithNothing(e1,e2,id1,e3) -> 
@@ -301,9 +299,29 @@ let rec eval (renv:renv) (e:expr) :valor =
     
   | Nil(t1) -> VNil 
     
-  | Just(e1) ->
-      let v1 = eval renv e1 
-      in VJust(v1)
+  | Just(e1) -> VJust(eval renv e1)
+                  
+  | List(e1,e2) -> Vlist(eval renv e1, eval renv e2)
+                  
+  | MatchWithNothing (e1, e2, x, e3) ->
+      let v1 = eval renv e1 in
+      let v2 = eval renv e2 in
+      (match v1 with
+         VNothing -> v2
+       | VJust v4 -> v2 
+       | _ -> raise BugTypeInfer)
+      
+      
+  | MatchWithNil (e1, e2, x, xs, e3) ->
+      let v1 = eval renv e1 in
+      (match v1 with 
+         VNil -> eval renv e2
+       | Vlist(v,vs) -> v1
+       | _ -> raise BugTypeInfer )
+      
+      
+  | Pipe(e1, e2) -> VNum 404
+      
         
   
     
@@ -330,6 +348,10 @@ let rec ttos (t:tipo) : string =
   | TyBool -> "bool"
   | TyFn(t1,t2)   ->  "("  ^ (ttos t1) ^ " --> " ^ (ttos t2) ^ ")"
   | TyPair(t1,t2) ->  "("  ^ (ttos t1) ^ " * "   ^ (ttos t2) ^ ")"
+  (*  Extensoes da sintaxe de tipos *) 
+  | TyMaybe(t1) -> "Maybe " ^ ttos(t1)
+  | TyList(t1) -> ttos(t1) ^ " list"
+  | TyNothing(t1) -> "Nothing: " ^ ttos(t1)
 
 (* função auxiliar que converte valor para string *)
 
@@ -341,7 +363,12 @@ let rec vtos (v: valor) : string =
   | VPair(v1, v2) ->
       "(" ^ vtos v1 ^ "," ^ vtos v1 ^ ")"
   | VClos _ ->  "fn"
-  | VRClos _ -> "fn"
+  | VRClos _ -> "fn" 
+(*  Extensoes da sintaxe de valores *) 
+  | VNothing -> "Nothing"
+  | VNil -> "Nil"
+  | VJust v1 -> "Just" ^ vtos v1 
+  | Vlist(v1,v2) -> "(" ^ vtos v1 ^ "," ^ vtos v1 ^ ")"
 
 (* principal do interpretador *)
 
