@@ -303,42 +303,25 @@ let rec eval (renv:renv) (e:expr) :valor =
                   
   | List(e1,e2) -> Vlist(eval renv e1, eval renv e2)
                   
-  | MatchWithNothing (e1, e2, x, e3) ->
-      let v1 = eval renv e1 in
-      let v2 = eval renv e2 in
-      (match v1 with
-         VNothing -> v2
-       | VJust v4 -> v2 
+  | MatchWithNothing (e1, e2, x, e3) -> 
+      (match eval renv e1 with
+       | VNothing -> eval renv e2
+       | VJust v4 -> eval renv e3 (*MUDAR*)
        | _ -> raise BugTypeInfer)
       
       
-  | MatchWithNil (e1, e2, x, xs, e3) ->
-      let v1 = eval renv e1 in
-      (match v1 with 
-         VNil -> eval renv e2
-       | Vlist(v,vs) -> v1
+  | MatchWithNil (e1, e2, x, xs, e3) -> 
+      (match eval renv e1 with 
+       | VNil -> eval renv e2
+       | Vlist(v,vs) -> eval renv e2 (*MUDAR*)
        | _ -> raise BugTypeInfer )
       
       
-  | Pipe(e1, e2) -> VNum 404
+  | Pipe(e1, e2) -> VNum 404 (*MUDAR*)
       
         
   
-    
-        
 
-
-        (*
-          | Nothing of tipo
-          | Just of expr
-          | MatchWithNothing of expr * expr * ident * expr 
-  (*| Justx of ident * expr //nao sei se ta certo*)
-          | Nil of tipo
-          | List of expr * expr 
-          | MatchWithNil of expr * expr * ident * ident * expr
-          | Pipe of expr * expr
-*)
-                  
   
 (* função auxiliar que converte tipo para string *)
 
@@ -381,6 +364,16 @@ let int_bse (e:expr) : unit =
     TypeError msg ->  print_string ("erro de tipo - " ^ msg) 
   | BugTypeInfer  ->  print_string "corrigir bug em typeinfer"
   | BugParser     ->  print_string "corrigir bug no parser para let rec" 
+  
+  
+   
+   (* TESTES =========================================== 
+int_bse( Nothing(TyBool) ) -> Nothing: Maybe bool
+int_bse( MatchWithNothing(Nothing(TyBool),Num 5, "ddd",Num 6)) -> 5: int
+  
+  
+*)
+
                         
   
                         
