@@ -343,7 +343,19 @@ let rec eval (renv:renv) (e:expr) :valor =
        | _ -> raise BugTypeInfer)
   
   
-  | Pipe(e1, e2) -> VNum 404 (*MUDAR*)
+  | Pipe(e1, e2) -> 
+      let v1 = eval renv e1 in
+      let v2 = eval renv e2 in
+      (match v2 with
+         VClos(x,ebdy,renv') ->
+           let renv'' = update renv' x v1
+           in eval renv'' ebdy 
+       | VRClos(f,x,ebdy,renv') ->
+           let renv''  = update renv' x v2 in
+           let renv''' = update renv'' f v1
+           in eval renv''' ebdy
+       | _ -> raise BugTypeInfer)
+      
       
   
   
@@ -392,11 +404,15 @@ let int_bse (e:expr) : unit =
   
    
    (* TESTES =========================================== 
-int_bse( Nothing(TyBool) ) -> Nothing: Maybe bool
-int_bse( MatchWithNothing(Nothing(TyBool),Num 5, "ddd",Num 6)) -> 5: int
-  
+int_bse(Nothing(TyBool))
+int_bse(MatchWithNothing(Nothing(TyBool),Num 5,"ddd",Num 6))
+int_bse(If(Binop(Eq,Num 5,Num 5),Num 20,Num 30))
   
 *)
+
+
+
+
 
                         
   
