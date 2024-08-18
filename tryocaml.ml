@@ -1,13 +1,15 @@
-(* This is an OCaml editor.
-   Enter your program here and send it to the toplevel using the "Eval code"
-   button or [Ctrl-e]. *)
-
 (*++++++++++++++++++++++++++++++++++++++*)
 (*  Interpretador para L1               *)
 (*   - inferência de tipos              *)
 (*   - avaliador big step com ambiente  *)
 (*++++++++++++++++++++++++++++++++++++++*)
 
+(*
+integrantes:
+Clayton Kauã Oliveira Barcelos
+Sandro Rudiero Saibro Veigas
+Walter Frank
+*)
 
 
 (**+++++++++++++++++++++++++++++++++++++++++*)
@@ -408,4 +410,4 @@ int_bse(Nothing(TyBool))
 int_bse(MatchWithNothing(Nothing(TyBool),Num 5,"ddd",Num 6))
 int_bse(If(Binop(Eq,Num 5,Num 5),Num 20,Num 30))
   
-*)              
+*)          
